@@ -1,0 +1,118 @@
+# 1. ติดตั้ง gradio ก่อน (ถ้ารันไปแล้วไม่ต้องรันบรรทัดนี้ซ้ำ)
+!pip install gradio -q
+
+import gradio as gr
+
+# ฟังก์ชันประมวลผลทั้งหมดของคุณ
+def drug_reminder_gui(username, drug, starttime_str, interval_str, count_str, currenttime_str, confirm_ทานแล้ว):
+    # แปลงข้อมูลเป็นตัวเลข
+    try:
+        starttime = float(starttime_str)
+        interval = float(interval_str)
+        count = int(count_str)
+        currenttime = float(currenttime_str)
+    except ValueError:
+        return "⚠️ กรุณาใส่ตัวเลขให้ถูกต้องสำหรับเวลาและจำนวนครั้ง", "", "", ""
+
+    # ประมวลผล
+    notifytime = starttime + (interval * count)
+
+    # เตรียมข้อความผลลัพธ์
+    result_text = f"ชื่อผู้ใช้: {username}\n" \
+                  f"ยาที่ต้องทาน: {drug}\n" \
+                  f"เวลาแจ้งเตือน: {notifytime:.2f} นาฬิกา\n"
+
+    # ตรวจสอบการแจ้งเตือน
+    if currenttime >= notifytime and confirm_ทานแล้ว:
+        status_text = f"💖 ถึงเวลาทานยา {drug} แล้วค่ะ/ครับ 💖"
+        status_color = "green" # สีเขียวเมื่อถึงเวลา
+    else:
+        status_text = "⏰ ยังไม่ถึงเวลาทานยา หรือยังไม่ได้ยืนยัน ⏰"
+        status_color = "red" # สีแดงเมื่อยังไม่ถึงเวลา
+
+    return result_text, notifytime, status_text, status_color
+
+# สร้าง Theme สีชมพู
+pink_theme = gr.themes.Soft(
+    primary_hue="pink",
+    secondary_hue="pink",
+    neutral_hue="gray",
+    font=[gr.themes.GoogleFont("Sarabun"), "ui-sans-serif", "system-ui", "sans-serif"], # เพิ่ม font ไทย
+    font_mono=gr.themes.GoogleFont("Fira Code"),
+)
+
+# สร้างหน้า GUI
+with gr.Blocks(theme=pink_theme, title="โปรแกรมแจ้งเตือนทานยา") as demo:
+    gr.Markdown("# 💊🌸 โปรแกรมแจ้งเตือนทานยา (Pink Edition) 🌸💊",
+                 # style="color: #D02090;" # สามารถเพิ่ม CSS ตรงนี้ได้
+                 )
+    gr.Markdown("---")
+    
+    with gr.Row():
+        gr.Markdown("### 📝 ข้อมูลยา")
+        
+    with gr.Row():
+        username_input = gr.Textbox(label="ชื่อผู้ใช้", placeholder="เช่น สมหญิง", interactive=True)
+        drug_input = gr.Textbox(label="ชื่อยาที่ต้องทาน", placeholder="เช่น Paracetamol", interactive=True)
+
+    with gr.Row():
+        starttime_input = gr.Textbox(label="เวลาเริ่มต้น (ชั่วโมง)", placeholder="เช่น 8.00", interactive=True)
+        interval_input = gr.Textbox(label="ช่วงเวลาห่าง (ชั่วโมง)", placeholder="เช่น 6 (ทานทุก 6 ชั่วโมง)", interactive=True)
+        count_input = gr.Textbox(label="จำนวนครั้งที่ต้องทาน", placeholder="เช่น 3 (3 ครั้ง)", interactive=True)
+    
+    with gr.Row():
+        gr.Markdown("### ⏰ สถานะปัจจุบัน")
+
+    with gr.Row():
+        currenttime_input = gr.Textbox(label="เวลาปัจจุบัน (ชั่วโมง)", placeholder="เช่น 14.30", interactive=True)
+        confirm_checkbox = gr.Checkbox(label="ฉันทานยาแล้ว", interactive=True)
+
+    # ปุ่มประมวลผล (สีชมพู)
+    process_button = gr.Button("💖 ตรวจสอบการทานยา 💖", variant="primary")
+    
+    gr.Markdown("---")
+    with gr.Row():
+        gr.Markdown("### ✨ ผลลัพธ์")
+
+    # กล่องแสดงผลลัพธ์
+    output_summary = gr.Textbox(label="สรุปข้อมูล", lines=5, interactive=False)
+    output_notifytime_hidden = gr.Textbox(visible=False) # ซ่อนไว้, ใช้แค่เก็บค่า notifytime
+    
+    # กล่องแสดงสถานะการทานยา (มีสี)
+    output_status_message = gr.Markdown("ยังไม่มีการตรวจสอบ",
+                                         elem_id="status_message") # กำหนด ID สำหรับ CSS
+
+    # เชื่อมปุ่มกับฟังก์ชัน
+    process_button.click(
+        fn=drug_reminder_gui,
+        inputs=[username_input, drug_input, starttime_input, interval_input, count_input, currenttime_input, confirm_checkbox],
+        outputs=[output_summary, output_notifytime_hidden, output_status_message, gr.State(value="")], # State ใช้รับสี
+    )
+    
+    # เพิ่ม CSS เพื่อปรับสีของสถานะ (ถ้าต้องการ)
+    demo.css = """
+    #status_message p {
+        font-size: 1.5em; /* ขนาดตัวอักษรใหญ่ขึ้น */
+        font-weight: bold; /* ตัวหนา */
+        text-align: center; /* จัดกลาง */
+        padding: 10px; /* ระยะห่างภายใน */
+        border-radius: 8px; /* ขอบโค้ง */
+    }
+    #status_message.green p {
+        color: #FFFFFF; /* ตัวอักษรสีขาว */
+        background-color: #D02090; /* สีชมพูเข้ม */
+    }
+    #status_message.red p {
+        color: #FFFFFF; /* ตัวอักษรสีขาว */
+        background-color: #FF69B4; /* สีชมพู */
+    }
+    """
+    
+    # อัปเดต CSS ตามค่าสีที่ส่งกลับมา
+    demo.load(lambda value: gr.update(elem_id="status_message", classes=value),
+             inputs=gr.State(value=""), # ค่าเริ่มต้น
+             outputs=output_status_message)
+
+
+# รันโปรแกรม
+demo.launch()
