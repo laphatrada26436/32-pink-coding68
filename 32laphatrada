@@ -1,0 +1,20 @@
+#รับข้อมูล (input)
+username = input ("กรุณาใส่ชื่อผู้ใช้")
+drug = input ("กรุณาใส่ชื่อยาที่ต้องทาน")
+
+starttime = float (input ("ใส่เวลาเริ่มต้น (ชั่วโมง)"))
+interval = float (input (" ใส่ช่วงเวลาห่าง (ชั่วโมง)"))
+count = int (input ("จำนวนครั้งที่ต้องทาน") )
+confirm = input ("ยืนยันว่าทานยาแล้ว")
+
+#ประมวลผล (process)
+notifytime = starttime + (interval * count)
+print ("\n=== ผลลัพธ์ =")
+print ("ชื่อผู้ใช้ ", username )
+print ("ยาที่ต้องทาน", drug)
+print ("เวลาแจ้งเตือน", notifytime, "นาฬิกา")
+currenttime = float (input ("\nใส่เวลาปัจจุบัน"))
+if currenttime >= notifytime and confirm.lower() == "yes":
+    print ("ถึงเวลาทานยา" , drug)
+else:
+    print ("ยังไม่ถึงเวลาทานยา หรือยังไม่ได้ยืนยัน" )
