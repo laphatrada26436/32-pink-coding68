@@ -1,0 +1,24 @@
+def check_even_odd():
+    try:
+        # รับค่าและแปลงเป็น float ก่อนเพื่อรองรับทศนิยม (ถ้ามี)
+        user_input = input("กรอกตัวเลขที่ต้องการตรวจสอบ: ")
+        number = float(user_input)
+
+        # ตรวจสอบว่าเป็นจำนวนเต็มหรือไม่
+        if not number.is_integer():
+            print(f"❌ {user_input} ไม่ใช่จำนวนเต็ม (เลขคู่/คี่ จะเช็คเฉพาะจำนวนเต็ม)")
+            return
+
+        # แปลงเป็น int เพื่อใช้ Modulo
+        n = int(number)
+
+        # การตรวจสอบด้วย Modulo
+        if n % 2 == 0:
+            print(f"✅ {n} คือ เลขคู่ (Even Number)")
+        else:
+            print(f"✅ {n} คือ เลขคี่ (Odd Number)")
+
+    except ValueError:
+        print("⚠️ ข้อผิดพลาด: กรุณากรอกเฉพาะตัวเลขเท่านั้น!")
+
+check_even_odd()
